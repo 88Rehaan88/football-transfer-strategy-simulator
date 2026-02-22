@@ -6,7 +6,7 @@ A rule-based football transfer window simulator with AI-powered analysis. Given 
 
 ---
 
-## Stack
+## Stack Used:
 
 ### Frontend
 - Plain HTML, CSS, and JavaScript — no framework
@@ -29,6 +29,24 @@ A rule-based football transfer window simulator with AI-powered analysis. Given 
 - Scraped data is cached as JSON files in `data/` and committed to the repository
 - Supported: **5 LaLiga clubs × 4 seasons** (2022/23 – 2025/26)
 
+---
+## Key Capabilities:
+
+- Rule-Based Transfer Engine: Simulates a full transfer window using deterministic sell and buy rules. Sells aging or surplus players, then fills gaps and upgrades squads within your budget constraints.
+
+<img width="1378" height="383" alt="image" src="https://github.com/user-attachments/assets/eed9cb6b-57a3-499d-9576-a1237f28a25c" />
+
+
+- Squad & Financial KPIs: Tracks key metrics before and after the window — squad valuation change, net spend, average age shift, and salary usage — giving a clear picture of what the strategy achieved.
+
+<img width="1421" height="758" alt="image" src="https://github.com/user-attachments/assets/a383971a-bdbb-43f7-961a-127d01eb2b92" />
+
+
+- AI-Powered Analysis: After each simulation, Google Gemini analyses the transfers and generates a structured breakdown — including a headline summary, financial verdict, and squad weakness which shows where our team is lacking.
+
+<img width="1420" height="510" alt="image" src="https://github.com/user-attachments/assets/9a530fe9-099b-44b1-b794-0919dd2d3012" />
+
+  
 ---
 
 ## Inputs
@@ -67,11 +85,6 @@ A rule-based football transfer window simulator with AI-powered analysis. Given 
 - **Sell fees** — players are sold at 85% of their Transfermarkt market value. Real negotiations depend on contract length, demand, and other factors.
 - **No loan market** — the engine only models permanent transfers.
 - **B-team players included** — Transfermarkt squads include youth and reserve players, which inflates squad counts and can affect position group logic.
-
-### AI
-- **Gemini output is non-deterministic** — temperature is set to 0.3 for consistency, but responses can vary slightly between runs.
-- **No hallucination guard** — the AI is grounded in the structured data passed to it, but is not cross-checked against external sources.
-- **Requires API key** — the AI analysis step will fail if `GEMINI_API_KEY` is not set. The simulation itself still runs; only the commentary is affected.
 
 ---
 

@@ -1,6 +1,6 @@
 # Football Transfer Strategy Simulator
 
-A rule-based football transfer window simulator with AI-powered analysis. Given a club, a season, and a budget, the engine simulates a full transfer window — selling aging or surplus players and buying replacements — then generates structured commentary using Google Gemini.
+A rule-based football transfer window simulator with AI-powered analysis. Given a club, a season, and a budget, the engine simulates a full transfer window, selling aging or surplus players and buying replacements, then generates structured commentary using Google Gemini.
 
 **Live demo:** https://football-transfer-strategy-simulator.onrender.com
 

@@ -1,0 +1,55 @@
+# Cursor Project Rules – Football Transfer Simulator
+
+## General Principles
+- Keep architecture modular and clean.
+- Avoid overengineering.
+- Prefer simple, readable solutions over complex abstractions.
+- Do not introduce new frameworks unless explicitly requested.
+- Maintain clear separation of concerns between scraper, strategy engine, backend, and AI layer.
+
+## Scope Constraints
+- This is a rule-based transfer simulator, not a real football simulation engine.
+- Do not implement match simulation, reinforcement learning, or optimization engines.
+- Do not add agent frameworks (e.g., LangGraph) unless explicitly requested.
+- Historical data is used as a starting state only.
+
+## Code Structure Rules
+- Each module should have a single responsibility.
+- Avoid files longer than ~300 lines.
+- Use type hints where appropriate.
+- Write clean docstrings for public functions.
+- Avoid deeply nested logic.
+
+## Scraper Rules
+- Use lightweight scraping (requests + BeautifulSoup preferred).
+- Implement basic anti-scraping handling (headers, delays).
+- Structure scraped data into clearly defined schemas.
+- Handle missing fields gracefully.
+
+## Strategy Engine Rules
+- Strategy logic must be deterministic and rule-based.
+- Budget constraints must always be enforced.
+- State updates must be explicit and traceable.
+- Avoid hidden side effects.
+
+## AI Integration Rules
+- AI should consume structured data only.
+- Prompts should be deterministic and reproducible.
+- Do not allow AI to control core business logic.
+- AI is used for explanation, not decision-making.
+
+## API & Backend Rules
+- Use FastAPI unless otherwise specified.
+- Keep endpoints minimal and clearly documented.
+- Validate inputs using Pydantic models.
+- Keep business logic separate from route definitions.
+
+## Frontend Rules
+- Keep UI clean and simple.
+- Prioritize clarity over styling complexity.
+- Avoid heavy frontend frameworks unless explicitly decided.
+
+## Documentation Rules
+- Each major design decision should be explainable.
+- Include reasoning for library choices.
+- Document known limitations and trade-offs.

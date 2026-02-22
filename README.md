@@ -33,16 +33,21 @@ A rule-based football transfer window simulator with AI-powered analysis. Given 
 ## Key Capabilities:
 
 - Rule-Based Transfer Engine: Simulates a full transfer window using deterministic sell and buy rules. Sells aging or surplus players, then fills gaps and upgrades squads within your budget constraints.
+  
 
 <img width="1378" height="383" alt="image" src="https://github.com/user-attachments/assets/eed9cb6b-57a3-499d-9576-a1237f28a25c" />
 
+-----
 
 - Squad & Financial KPIs: Tracks key metrics before and after the window — squad valuation change, net spend, average age shift, and salary usage — giving a clear picture of what the strategy achieved.
 
+
 <img width="1421" height="758" alt="image" src="https://github.com/user-attachments/assets/a383971a-bdbb-43f7-961a-127d01eb2b92" />
 
+-----
 
 - AI-Powered Analysis: After each simulation, Google Gemini analyses the transfers and generates a structured breakdown — including a headline summary, financial verdict, and squad weakness which shows where our team is lacking.
+
 
 <img width="1420" height="510" alt="image" src="https://github.com/user-attachments/assets/9a530fe9-099b-44b1-b794-0919dd2d3012" />
 

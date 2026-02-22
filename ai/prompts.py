@@ -26,6 +26,7 @@ def build_season_summary_prompt(
     """
     kpis = result.kpis
 
+    # Format sold/bought lists so the model can reference names and numbers in its reply
     sold_lines = [
         f"  - {p.name} (age {p.age}, {p.position}, MV €{(p.market_value or 0):,})"
         for p in result.players_sold
@@ -44,7 +45,7 @@ def build_season_summary_prompt(
         f"{g}: {avg_ages.get(g, 'N/A')}" for g in ["GK", "DEF", "MID", "ATT"]
     )
 
-    # Build the list of all transfer names for the justifications section
+    # One justification per transfer — we list them so the model doesn't miss anyone
     all_transfers = (
         [f"{p.name} (sold)" for p in result.players_sold]
         + [f"{p.name} (bought)" for p in result.players_bought]
@@ -87,7 +88,7 @@ Transfers requiring justification:
 
 == TASK ==
 
-Return ONLY a valid JSON object matching this exact schema. No markdown, no explanation outside the JSON:
+Return ONLY a valid JSON object matching this exact schema. No markdown, no explanation outside the JSON (so we can parse it reliably):
 
 {{
   "headline": "<1-3 sentence narrative summary of the entire transfer window — what happened, the strategic direction, and what it means for the club going forward>",
@@ -112,7 +113,7 @@ Rules:
 - Be specific: reference player names, ages, fees, and position data.
 - Do not be generic. Every sentence should be grounded in the numbers above.
 """
-    return prompt
+    return prompt  # Single string — no chat history; each run is independent
 
 
 def build_comparison_prompt(
@@ -125,11 +126,12 @@ def build_comparison_prompt(
     Receives summaries of all three strategy runs and asks Gemini to
     recommend the best mode with clear reasoning.
     """
+    # All results share the same club/season — we only need the first
     club = results[0].sim_input.team_name
     league = results[0].sim_input.league
     season = results[0].sim_input.season
 
-    summaries_block = json.dumps(mode_summaries, indent=2)
+    summaries_block = json.dumps(mode_summaries, indent=2)  # Pre-formatted for the prompt
 
     prompt = f"""You are a football director advising {club} ({league}, {season}/{season + 1}).
 

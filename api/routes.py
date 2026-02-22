@@ -25,9 +25,9 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 
 class AgeDistribution(BaseModel):
-    labels: list[str]   # age bucket labels e.g. ["18-20", "21-23", ...]
-    before: list[int]   # player counts per bucket, before simulation
-    after: list[int]    # player counts per bucket, after simulation
+    labels: list[str]   # age bucket labels, e.g. ["U21", "21-23", ...]
+    before: list[int]   # player counts per bucket before simulation
+    after: list[int]    # player counts per bucket after simulation
 
 
 class ValuationData(BaseModel):
@@ -64,6 +64,7 @@ class SimulationResponse(BaseModel):
 # Chart data computation (pure Python, no AI)
 # ---------------------------------------------------------------------------
 
+# Buckets match typical football squad analysis breakdowns (youth, prime, decline)
 _AGE_BUCKETS = [
     ("U21",   range(0, 21)),
     ("21-23", range(21, 24)),
@@ -80,7 +81,7 @@ def _age_bucket(age: int | None) -> str:
     for label, r in _AGE_BUCKETS:
         if age in r:
             return label
-    return "33+"
+    return "33+"  # Fallback — covers any edge case above the last bucket
 
 
 def _build_age_distribution(
@@ -105,6 +106,7 @@ def _build_age_distribution(
 
 def _build_chart_data(result) -> ChartData:
     k = result.kpis
+    # Spent = original budget minus what's left — not tracked directly in KPIs
     transfer_spent = result.sim_input.transfer_budget - k.transfer_budget_remaining
 
     return ChartData(
@@ -142,6 +144,7 @@ def list_clubs():
     """
     result = []
     for league, clubs in LEAGUE_TOP_CLUBS.items():
+        # Convert internal league keys to display-friendly labels for the frontend
         league_label = {
             "laliga": "LaLiga",
             "premier-league": "Premier League",
@@ -166,7 +169,7 @@ def simulate(sim_input: SimulationInput):
       6. Generate AI analysis via Gemini
       7. Return structured response with chart data
     """
-    # Resolve internal club metadata from the registry
+    # User only sends team_name — we look up slug/id/league so they never need to know them
     club_meta = CLUB_REGISTRY.get(sim_input.team_name)
     if not club_meta:
         raise HTTPException(
@@ -187,12 +190,13 @@ def simulate(sim_input: SimulationInput):
     try:
         analysis = analyse_season(result)
     except EnvironmentError as e:
+        # Missing API key — surface a clear message rather than a generic 500
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI analysis error: {e}")
 
     chart_data = _build_chart_data(result)
-    season_label = f"{sim_input.season}/{str(sim_input.season + 1)[-2:]}"
+    season_label = f"{sim_input.season}/{str(sim_input.season + 1)[-2:]}"  # e.g. "2024/25"
 
     return SimulationResponse(
         club=sim_input.team_name,

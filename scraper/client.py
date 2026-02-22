@@ -34,20 +34,21 @@ class ScraperClient:
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update(REQUEST_HEADERS)
-        
-        # Configure retry strategy for transient failures
+
+        # 429 = rate limited, 5xx = server errors — all worth retrying
+        # backoff_factor=1 means waits: 1s, 2s, 4s between retries
         retry_strategy = Retry(
             total=MAX_RETRIES,
             backoff_factor=1,
             status_forcelist=[429, 500, 502, 503, 504],
-            allowed_methods=["GET"],  # Only retry GET requests
-            respect_retry_after_header=True,  # Respect rate-limiting headers
+            allowed_methods=["GET"],
+            respect_retry_after_header=True,  # honours Transfermarkt's Retry-After header
         )
         adapter = HTTPAdapter(max_retries=retry_strategy)
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
-        
-        self.last_request_time = 0
+
+        self.last_request_time = 0  # tracks when the last request was made
     
     def get(self, url: str) -> Optional[str]:
         """
@@ -75,7 +76,9 @@ class ScraperClient:
         if self.last_request_time > 0:
             elapsed = time.time() - self.last_request_time
             min_delay, max_delay = REQUEST_DELAY_RANGE
+            # Randomized so requests don't follow a predictable pattern
             delay = random.uniform(min_delay, max_delay)
-            
+
+            # Only sleep for the remaining time needed, not the full delay
             if elapsed < delay:
                 time.sleep(delay - elapsed)

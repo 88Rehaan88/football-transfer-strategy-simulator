@@ -106,10 +106,10 @@ def _load_or_scrape_market_pool(sim_input: SimulationInput) -> list[Player]:
         with open(cache_path, encoding="utf-8") as f:
             data = json.load(f)
         players = [Player(**p) for p in data]
-        # Always exclude user's own club from pool (even from cache)
+        # Re-apply exclusion even from cache — in case the user's club was accidentally included
         return [p for p in players if p.current_club != sim_input.team_name]
 
-    # Try to build pool from individually cached club files first
+    # Try assembling the pool from individual club cache files before hitting the network
     players = _build_pool_from_cached_clubs(sim_input)
     if not players:
         print(f"[Engine] No cached clubs found — scraping {sim_input.league} clubs...")
@@ -119,7 +119,7 @@ def _load_or_scrape_market_pool(sim_input: SimulationInput) -> list[Player]:
             exclude_club_id=sim_input.club_id,
         )
 
-    # Cache to disk for reuse
+    # Save the combined pool so future simulations for this league/season are instant
     with open(cache_path, "w", encoding="utf-8") as f:
         json.dump([p.model_dump(mode="json") for p in players], f, indent=2, ensure_ascii=False)
     print(f"[Engine] Market pool cached: {cache_path.name}")
@@ -143,14 +143,15 @@ def _build_pool_from_cached_clubs(sim_input: SimulationInput) -> list[Player]:
 
     for club in clubs:
         if club["id"] == sim_input.club_id:
-            continue  # Skip user's own club
+            continue  # Skip user's own club — they're not in their own market pool
 
         slug = club["name"].lower().replace(" ", "-")
         cache_path = DATA_DIR / f"{slug}_{season_str}.json"
 
         if not cache_path.exists():
             print(f"[Engine] No cache for {club['name']} — will scrape fresh")
-            return []  # Trigger full live scrape
+            # Return empty to trigger a full live scrape rather than a partial pool
+            return []
 
         with open(cache_path, encoding="utf-8") as f:
             data = json.load(f)
@@ -176,8 +177,10 @@ def _load_or_scrape_squad(sim_input: SimulationInput) -> list[Player]:
         print(f"[Engine] Loading squad from cache: {cache_path.name}")
         with open(cache_path, encoding="utf-8") as f:
             data = json.load(f)
+        # Key is 'players' — matches the TeamScrapingResult schema in storage.py
         return [Player(**p) for p in data.get("players", [])]
 
+    # No cache — fall back to live scraping and let the scraper handle caching
     print(f"[Engine] No cache found — scraping {sim_input.team_name}...")
     result = scrape_team(
         club_slug=sim_input.club_slug,

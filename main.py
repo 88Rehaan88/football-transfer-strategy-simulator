@@ -18,10 +18,9 @@ import json
 import sys
 from dotenv import load_dotenv
 
-# Load .env file before any module that reads environment variables
-load_dotenv()
+load_dotenv()  # Load .env before any module reads environment variables
 
-# Force UTF-8 output on Windows to handle special characters in player names
+# Windows terminals default to cp1252 — this ensures player names with accents print correctly
 if sys.stdout.encoding != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -71,7 +70,7 @@ def cmd_scrape(args: argparse.Namespace) -> None:
     )
     print(f"Scraped: {len(result.players)} players, {len(result.transfers)} transfers")
     filepath = save_result(result)
-    print(f"Saved to: {filepath}")
+    print(f"Saved to: {filepath}")  # JSON file in data/ — reused by the engine as cache
 
 
 def cmd_simulate(args: argparse.Namespace) -> None:
@@ -116,14 +115,14 @@ def cmd_simulate(args: argparse.Namespace) -> None:
 
 
 def cmd_serve(args: argparse.Namespace) -> None:
-    import uvicorn
+    import uvicorn  # Imported here so it's only required when actually serving
     print(f"Starting server at http://{args.host}:{args.port}")
     print("Open your browser at the URL above to use the simulator.")
     uvicorn.run(
         "api.server:app",
         host=args.host,
         port=args.port,
-        reload=args.reload,
+        reload=args.reload,  # --reload flag enables hot-reload for local development
     )
 
 

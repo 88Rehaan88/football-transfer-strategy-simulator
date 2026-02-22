@@ -6,7 +6,7 @@ by uvicorn without triggering route registration side effects.
 """
 
 from dotenv import load_dotenv
-load_dotenv()  # Must run before any module reads GEMINI_API_KEY
+load_dotenv()  # Must happen before any module reads GEMINI_API_KEY — order matters here
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,6 +23,7 @@ def create_app() -> FastAPI:
         version="1.0.0",
     )
 
+    # Allow all origins so the frontend can call the API regardless of where it's hosted
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -32,7 +33,7 @@ def create_app() -> FastAPI:
 
     app.include_router(router)
 
-    # Serve the frontend from /
+    # Serve the frontend at / — must be mounted last so API routes take priority
     frontend_dir = Path(__file__).parent.parent / "frontend"
     if frontend_dir.exists():
         app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")

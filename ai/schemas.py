@@ -13,7 +13,7 @@ class TransferJustification(BaseModel):
     """AI reasoning for a single transfer decision (buy or sell)."""
 
     player_name: str
-    decision: Literal["bought", "sold"]
+    decision: Literal["bought", "sold"]  # Fixed values so the UI can style or filter by type
     reasoning: str = Field(
         ...,
         description="1-2 sentences: why the decision was made + tactical/financial impact",
@@ -33,7 +33,7 @@ class SeasonSummary(BaseModel):
     key_observations: list[str] = Field(
         ...,
         min_length=3,
-        max_length=5,
+        max_length=5,  # Keeps the summary focused — not too short, not a wall of text
         description="3-5 concrete bullet-point observations about what the strategy achieved",
     )
     financial_verdict: str = Field(
@@ -53,7 +53,7 @@ class SeasonSummary(BaseModel):
 class StrategyModeResult(BaseModel):
     """Summary of a single strategy mode, used inside a comparison."""
 
-    mode: str = Field(..., description="Strategy mode name: rebuild | balanced | invest")
+    mode: str = Field(..., description="Strategy mode name: balanced | conservative | win_now")
     headline: str
     net_spend_eur: int
     valuation_change_eur: int

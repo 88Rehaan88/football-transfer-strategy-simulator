@@ -31,6 +31,7 @@ def save_result(result: TeamScrapingResult) -> Path:
     filename = _build_filename(result.team_name, result.season)
     filepath = DATA_DIR / filename
 
+    # mode="json" ensures dates and other non-serializable types are converted properly
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(result.model_dump(mode="json"), f, indent=2, ensure_ascii=False)
 
@@ -41,5 +42,6 @@ def save_result(result: TeamScrapingResult) -> Path:
 def _build_filename(team_name: str, season: str) -> str:
     """Build a safe filename from team name and season."""
     import re
+    # Replaces spaces and special chars with hyphens: "FC Barcelona" → "fc-barcelona"
     slug = re.sub(r"[^a-z0-9\-]", "-", team_name.lower())
     return f"{slug}_{season}.json"

@@ -41,12 +41,14 @@ def parse_players(html: str, team_name: str) -> list[Player]:
     if not tbody:
         return players
 
+    # recursive=False avoids picking up nested rows inside the inline-tables
     for row in tbody.find_all("tr", recursive=False):
         try:
             player = _parse_player_row(row, team_name)
             if player:
                 players.append(player)
         except Exception:
+            # Skip malformed rows silently — partial data is worse than no data
             continue
 
     return players
@@ -79,18 +81,19 @@ def _parse_player_row(row, team_name: str) -> Optional[Player]:
     if len(inline_rows) >= 2:
         position = inline_rows[1].get_text(strip=True) or None
 
-    # Birth date and age from td[2]: "30/04/1992 (33)"
+    # td[2] contains both dob and age: "30/04/1992 (33)"
+    # We split on "(" to get each part separately
     dob_text = tds[2].get_text(strip=True)
     birth_date = None
     age = None
     if dob_text:
-        # Split "30/04/1992 (33)" into date part and age part
         dob_part = dob_text.split("(")[0].strip()
         birth_date = parse_date(dob_part)
         age_match = dob_text.split("(")[-1].replace(")", "").strip() if "(" in dob_text else None
         age = _safe_int(age_match) if age_match else None
 
-    # Nationality from flag img title attributes in td[3] and td[4]
+    # td[3] is primary nationality, td[4] is secondary — we take the first one found
+    # Nationality is stored in the flag image's title attribute, not as text
     nationality = None
     for nat_td in [tds[3], tds[4]]:
         flags = nat_td.find_all("img", class_="flaggenrahmen")
@@ -141,7 +144,8 @@ def parse_transfers(html: str, team_name: str) -> list[Transfer]:
     """
     soup = BeautifulSoup(html, "lxml")
 
-    # Both h2 headers share name="zugaenge" — find by position, not name
+    # Transfermarkt uses name="zugaenge" on both the arrivals and departures headers,
+    # so we can't distinguish them by attribute — we rely on their order in the page instead
     all_headers = soup.find_all("h2", attrs={"name": "zugaenge"})
     arrivals_header = all_headers[0] if len(all_headers) > 0 else None
     departures_header = all_headers[1] if len(all_headers) > 1 else None
@@ -217,11 +221,12 @@ def _parse_transfer_row(
     if len(inline_rows) >= 2:
         position = inline_rows[1].get_text(strip=True) or None
 
-    # Age is in td[2] (class="zentriert"), td[0]=color-bar, td[1]=player
+    # td[0] = color bar, td[1] = player inline-table, td[2] = age
     tds = row.find_all("td", recursive=False)
     age = _safe_int(tds[2].get_text(strip=True)) if len(tds) > 2 else None
 
-    # Club name: second inline-table, td.hauptlink > a (avoids grabbing the logo link)
+    # The row has two inline-tables: first is the player, second is the other club
+    # We use td.hauptlink to get the club name text and avoid grabbing the logo link
     club_name = None
     club_cells = row.find_all("table", class_="inline-table")
     if len(club_cells) >= 2:
@@ -231,7 +236,7 @@ def _parse_transfer_row(
             if club_link:
                 club_name = club_link.get_text(strip=True)
 
-    # Fee is in last cell, inside a link (or just text for free transfers)
+    # Fee is in the last cell — it's wrapped in a link for known fees, plain text for free/loan
     fee_cell = tds[-1] if tds else None
     if fee_cell:
         fee_link = fee_cell.find("a")
@@ -241,7 +246,7 @@ def _parse_transfer_row(
     transfer_fee = parse_fee(fee_text)
     is_loan = "loan" in fee_text.lower()
 
-    # Direction determines from/to
+    # from/to direction depends on whether this is an arrival or departure for team_name
     if direction == "in":
         from_club = club_name
         to_club = team_name
@@ -312,11 +317,12 @@ def parse_date(date_str: Optional[str]) -> Optional[date]:
 
     cleaned = date_str.strip()
 
+    # Transfermarkt uses different date formats across pages, so we try each one
     formats = [
-        "%d/%m/%Y",   # 30/04/1992 (squad page)
-        "%b %d, %Y",  # Jul 1, 2024
-        "%d.%m.%Y",   # 01.07.2024
-        "%Y-%m-%d",   # 2024-07-01 (ISO)
+        "%d/%m/%Y",   # 30/04/1992 — squad page
+        "%b %d, %Y",  # Jul 1, 2024 — transfer history
+        "%d.%m.%Y",   # 01.07.2024 — some regional formats
+        "%Y-%m-%d",   # 2024-07-01 — ISO, used in API responses
     ]
 
     for fmt in formats:

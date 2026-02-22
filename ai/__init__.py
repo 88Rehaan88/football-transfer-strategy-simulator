@@ -1,1 +1,1 @@
-# AI analysis module — Gemini-powered strategic commentary
+# AI analysis module — Gemini-powered commentary on simulation results (structured JSON only)

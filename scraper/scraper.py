@@ -39,10 +39,10 @@ def scrape_team(
     client = ScraperClient()
     season = _format_season(season_start_year)
 
-    # Stage 1: Transfers
+    # Stage 1: transfers page gives us historical in/out moves for the season
     transfers = _scrape_transfers(client, club_slug, club_id, team_name, season_start_year)
 
-    # Stage 2: Squad (players)
+    # Stage 2: squad page gives us the current roster with market values and ages
     players = _scrape_squad(client, club_slug, club_id, team_name, season_start_year)
 
     return TeamScrapingResult(
@@ -113,10 +113,12 @@ def scrape_market_pool(
         print(f"[Market Pool] Unknown league: {league}")
         return []
 
+    # One shared client so delays are applied across all club requests, not per-club
     client = ScraperClient()
     all_players: list[Player] = []
 
     for club in clubs:
+        # Skip the user's own club — they're not available to buy from themselves
         if club["id"] == exclude_club_id:
             print(f"[Market Pool] Skipping {club['name']} (user's club)")
             continue

@@ -15,7 +15,7 @@ from ai.prompts import build_season_summary_prompt, build_comparison_prompt
 from strategy.models import SimulationResult
 from strategy.market import get_position_group
 
-_MODEL = "gemini-2.0-flash"
+_MODEL = "gemini-2.0-flash"  # Fast and cheap; structured JSON output is enough for this task
 
 
 def _get_client() -> genai.Client:
@@ -51,7 +51,7 @@ def _compute_position_stats(result: SimulationResult) -> dict:
     avg_age: dict[str, float | str] = {}
     for g in groups:
         ages = age_sums[g]
-        avg_age[g] = round(sum(ages) / len(ages), 1) if ages else "N/A"
+        avg_age[g] = round(sum(ages) / len(ages), 1) if ages else "N/A"  # N/A if no players in group
 
     return {"counts": counts, "avg_age": avg_age}
 
@@ -78,13 +78,13 @@ def analyse_season(result: SimulationResult) -> SeasonSummary:
         model=_MODEL,
         contents=prompt,
         config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            temperature=0.3,
+            response_mime_type="application/json",  # Forces JSON output — easier to parse
+            temperature=0.3,  # Some variation but mostly consistent structure
         ),
     )
 
     data = json.loads(response.text.strip())
-    return SeasonSummary(**data)
+    return SeasonSummary(**data)  # Pydantic validates and maps to our schema
 
 
 def compare_strategies(results: list[SimulationResult]) -> StrategyComparison:
@@ -99,11 +99,13 @@ def compare_strategies(results: list[SimulationResult]) -> StrategyComparison:
     """
     client = _get_client()
 
+    # Two parallel lists: rich summaries for the prompt, typed summaries for the response
     mode_summaries = []
     mode_results: list[StrategyModeResult] = []
 
     for r in results:
         k = r.kpis
+        # Full stats for Gemini to reason over
         summary = {
             "mode": r.sim_input.strategy_mode,
             "net_spend_eur": k.net_spend,
@@ -117,6 +119,7 @@ def compare_strategies(results: list[SimulationResult]) -> StrategyComparison:
             "salary_budget_eur": k.salary_budget,
         }
         mode_summaries.append(summary)
+        # Trimmed for StrategyModeResult — headline comes from AI in comparison response, we leave it blank
         mode_results.append(
             StrategyModeResult(
                 mode=r.sim_input.strategy_mode,
@@ -140,6 +143,7 @@ def compare_strategies(results: list[SimulationResult]) -> StrategyComparison:
     )
 
     comparison_data = json.loads(response.text.strip())
+    # We already have mode_summaries as StrategyModeResult; AI only returns recommendation + rationale + tradeoffs
     return StrategyComparison(
         recommended_mode=comparison_data["recommended_mode"],
         recommendation_rationale=comparison_data["recommendation_rationale"],

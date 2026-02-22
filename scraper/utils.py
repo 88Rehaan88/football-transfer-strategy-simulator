@@ -22,29 +22,29 @@ def parse_fee(raw_fee: str) -> Optional[int]:
     Returns:
         Fee amount in euros as integer, or None if undisclosed/free
     """
+    # These strings appear on Transfermarkt for undisclosed or no-fee moves
     if not raw_fee or raw_fee.strip() in ["?", "-", "Free transfer", "Loan"]:
         return None
-    
-    # Remove currency symbols and whitespace
+
     cleaned = raw_fee.replace("€", "").replace("£", "").replace("$", "").strip()
-    
-    # Match patterns like "25.00m" or "800Th."
+
+    # Transfermarkt formats fees as "25.00m" (millions) or "800Th." (thousands)
     match = re.search(r"([\d.]+)\s*(m|bn|k|th\.?)", cleaned, re.IGNORECASE)
-    
+
     if not match:
         return None
-    
+
     value = float(match.group(1))
     unit = match.group(2).lower()
-    
-    # Convert to euros
+
+    # Convert the matched unit to a full integer euro amount
     if unit in ["m", "mn"]:
         return int(value * 1_000_000)
     elif unit == "bn":
         return int(value * 1_000_000_000)
     elif unit in ["k", "th", "th."]:
         return int(value * 1_000)
-    
+
     return None
 
 
@@ -62,5 +62,6 @@ def extract_player_id(url: str) -> Optional[str]:
     Returns:
         Player ID string, or None if not found
     """
+    # Player IDs appear after "/spieler/" in all Transfermarkt player URLs
     match = re.search(r"/spieler/(\d+)", url)
     return match.group(1) if match else None

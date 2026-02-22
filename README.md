@@ -31,6 +31,50 @@ A rule-based football transfer window simulator with AI-powered analysis. Given 
 
 ---
 
+## Inputs
+
+| Field | Description |
+|---|---|
+| Club Name | Dropdown — one of the 5 supported LaLiga clubs |
+| Season | 2022, 2023, 2024, or 2025 |
+| Transfer Budget | Available spend on player fees (€) |
+| Salary Budget | Total annual wage bill allowed (€) |
+| Strategy Mode | Balanced / Conservative / Win Now |
+
+---
+
+## Strategy Modes
+
+| Mode | Behaviour |
+|---|---|
+| **Balanced** |	A middle-ground approach — moderate squad turnover with no specific spending restrictions |
+| **Conservative** | Prioritizes financial caution and long-term squad building by selling aging players and buying young talent |
+| **Win Now** | Maximizes short-term competitiveness by protecting experienced players and spending aggressively |
+
+---
+
+## Limitations & Trade-offs
+
+### Data
+- **LaLiga only** — scraped data covers 5 clubs (Real Madrid, FC Barcelona, Atletico Madrid, Real Sociedad, Villarreal) across 4 seasons. Other leagues are defined in the config but have no cached data.
+- **Static market pool** — transfer candidates come from the other 4 LaLiga clubs in the same season, not the full global market. This limits the variety of available signings.
+- **Transfermarkt dependency** — if the site structure changes, the scraper will need updating. Live scraping is only triggered when no cache exists.
+
+### Simulation
+- **One season at a time** — the engine simulates a single transfer window, not multi-year progression.
+- **No match simulation** — squad quality is measured by market value, not actual performance metrics (goals, ratings, etc.).
+- **Salary estimation** — annual salary is estimated as 10% of market value. Real contracts vary significantly from this.
+- **Sell fees** — players are sold at 85% of their Transfermarkt market value. Real negotiations depend on contract length, demand, and other factors.
+- **No loan market** — the engine only models permanent transfers.
+- **B-team players included** — Transfermarkt squads include youth and reserve players, which inflates squad counts and can affect position group logic.
+
+### AI
+- **Gemini output is non-deterministic** — temperature is set to 0.3 for consistency, but responses can vary slightly between runs.
+- **No hallucination guard** — the AI is grounded in the structured data passed to it, but is not cross-checked against external sources.
+- **Requires API key** — the AI analysis step will fail if `GEMINI_API_KEY` is not set. The simulation itself still runs; only the commentary is affected.
+
+---
+
 ## How to Run Locally
 
 ### 1. Clone the repository
@@ -74,46 +118,3 @@ python main.py serve
 
 Open your browser at **http://127.0.0.1:8000**.
 
----
-
-## Inputs
-
-| Field | Description |
-|---|---|
-| Club Name | Dropdown — one of the 5 supported LaLiga clubs |
-| Season | 2022, 2023, 2024, or 2025 |
-| Transfer Budget | Available spend on player fees (€) |
-| Salary Budget | Total annual wage bill allowed (€) |
-| Strategy Mode | Balanced / Conservative / Win Now |
-
----
-
-## Strategy Modes
-
-| Mode | Behaviour |
-|---|---|
-| **Balanced** |	A middle-ground approach — moderate squad turnover with no specific spending restrictions |
-| **Conservative** | Prioritizes financial caution and long-term squad building by selling aging players and buying young talent |
-| **Win Now** | Maximizes short-term competitiveness by protecting experienced players and spending aggressively |
-
----
-
-## Limitations & Trade-offs
-
-### Data
-- **LaLiga only** — scraped data covers 5 clubs (Real Madrid, FC Barcelona, Atletico Madrid, Real Sociedad, Villarreal) across 4 seasons. Other leagues are defined in the config but have no cached data.
-- **Static market pool** — transfer candidates come from the other 4 LaLiga clubs in the same season, not the full global market. This limits the variety of available signings.
-- **Transfermarkt dependency** — if the site structure changes, the scraper will need updating. Live scraping is only triggered when no cache exists.
-
-### Simulation
-- **One season at a time** — the engine simulates a single transfer window, not multi-year progression.
-- **No match simulation** — squad quality is measured by market value, not actual performance metrics (goals, ratings, etc.).
-- **Salary estimation** — annual salary is estimated as 10% of market value. Real contracts vary significantly from this.
-- **Sell fees** — players are sold at 85% of their Transfermarkt market value. Real negotiations depend on contract length, demand, and other factors.
-- **No loan market** — the engine only models permanent transfers.
-- **B-team players included** — Transfermarkt squads include youth and reserve players, which inflates squad counts and can affect position group logic.
-
-### AI
-- **Gemini output is non-deterministic** — temperature is set to 0.3 for consistency, but responses can vary slightly between runs.
-- **No hallucination guard** — the AI is grounded in the structured data passed to it, but is not cross-checked against external sources.
-- **Requires API key** — the AI analysis step will fail if `GEMINI_API_KEY` is not set. The simulation itself still runs; only the commentary is affected.

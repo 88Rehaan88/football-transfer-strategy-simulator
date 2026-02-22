@@ -92,9 +92,9 @@ Open your browser at **http://127.0.0.1:8000**.
 
 | Mode | Behaviour |
 |---|---|
-| **Balanced** | Moderate age thresholds, spends full budget |
-| **Conservative** | Sells earlier (29+), buys younger (19–24), caps total spend at 50% of budget |
-| **Win Now** | Protects experienced players (sells only 35+), spends aggressively |
+| **Balanced** |	A middle-ground approach — moderate squad turnover with no specific spending restrictions |
+| **Conservative** | Prioritizes financial caution and long-term squad building by selling aging players and buying young talent |
+| **Win Now** | Maximizes short-term competitiveness by protecting experienced players and spending aggressively |
 
 ---
 

@@ -76,20 +76,40 @@ A rule-based football transfer window simulator with AI-powered analysis. Given 
 
 ---
 
-## Limitations & Trade-offs
+## Challenges Faced:
+1. Rate limiting and IP blocking
+Transfermarkt rate-limits and blocks scrapers. During development we hit cooldown periods and had to switch networks (e.g., mobile hotspot) to continue scraping. The client uses randomized delays, retries with exponential backoff, and Retry-After support to reduce this risk.
+2. Inconsistent table structures
+Transfermarkt uses nested tables inside <td> cells, repeated zentriert classes, mixed content (links, images, text), and rows with missing links (e.g. free agents). Instead of relying on class names, we anchor parsing to stable markers (h2[name="zugaenge"], table.items) and use positional extraction where structure is consistent. Malformed rows are skipped inside try/except so one bad row does not break the full scrape.
+3. Chart label clipping
+Chart.js labels were cut off due to fixed heights and limited padding. We removed fixed CSS heights, used aspectRatio in Chart.js, added layout.padding, and switched the budget view from a doughnut to horizontal stacked bars so labels fit.
+4. Performance vs. data depth
+Fetching extra data (e.g. per-player pages) would increase requests and rate-limiting risk. We kept scraping at club level (transfers + squad), separated HTTP from parsing, and structured the scraper so per-player enrichment could be added later without hard coupling.
+5. Deployment environment
+The initial Render build failed because pydantic-core did not build on Python 3.14. We pinned Python to 3.11.9 via .python-version to resolve it.
+6. UX complexity of club selection
+Users were originally expected to enter club slug and ID. We simplified this to a club dropdown and server-side lookup from team_name so users never need Transfermarkt identifiers.
 
-### Data
-- **LaLiga only** — scraped data covers 5 clubs (Real Madrid, FC Barcelona, Atletico Madrid, Real Sociedad, Villarreal) across 4 seasons. Other leagues are defined in the config but have no cached data.
-- **Static market pool** — transfer candidates come from the other 4 LaLiga clubs in the same season, not the full global market. This limits the variety of available signings.
-- **Transfermarkt dependency** — if the site structure changes, the scraper will need updating. Live scraping is only triggered when no cache exists.
+## Limitations:
+Data scope — Only LaLiga is supported (5 clubs: Real Madrid, Barcelona, Atletico Madrid, Real Sociedad, Villarreal) and only seasons 2022/23–2025/26.
+Decision inputs — Transfer logic is based on age and finances. There is no performance data (goals, ratings, minutes), so the engine cannot incorporate recent form or in-game impact.
+Single data source — All data comes from Transfermarkt. Layout or schema changes there would require scraper updates, and there is no fallback source.
+Market pool — Buy options are limited to the other four LaLiga top clubs in the same season. There is no global transfer market or other leagues.
+No loan market — Only permanent transfers are simulated; loans are ignored.
+Salary and fees — Salary is estimated as 10% of market value; sell fees use 85% of market value. These are approximations, not real contract or negotiation data.
 
-### Simulation
-- **One season at a time** — the engine simulates a single transfer window, not multi-year progression.
-- **No match simulation** — squad quality is measured by market value, not actual performance metrics (goals, ratings, etc.).
-- **Salary estimation** — annual salary is estimated as 10% of market value. Real contracts vary significantly from this.
-- **Sell fees** — players are sold at 85% of their Transfermarkt market value. Real negotiations depend on contract length, demand, and other factors.
-- **No loan market** — the engine only models permanent transfers.
-- **B-team players included** — Transfermarkt squads include youth and reserve players, which inflates squad counts and can affect position group logic.
+
+## Trade-offs:
+Static scraper — We use requests + BeautifulSoup instead of a browser-based scraper. This reduces complexity and avoids headless Chrome/Playwright, but we cannot run JavaScript or handle heavily dynamic pages.
+Cached data in repo — Scraped JSON is committed under data/ so deployment does not require live scraping. This increases repo size and makes updates manual, but avoids Transfermarkt calls in production.
+Simplified financial model — Fixed rules (e.g. 85% sell fee, 10% salary) make the simulation fast and transparent, but less realistic than negotiation-based models.
+Future Work
+Additional data sources — Integrate performance stats (e.g. FBref, Opta) so decisions use form and output metrics, not just age and market value.
+More leagues and seasons — Expand beyond LaLiga. The config already includes Premier League, Bundesliga, Serie A, and Ligue 1; only scraping and data need to be added.
+Multi-season runs — Chain multiple transfer windows so users can simulate 2–3 seasons and see long-term squad evolution.
+Strategy comparison mode — Run all three strategies and have the AI compare results and suggest the best fit for the club’s situation.
+Per-player enrichment (optional) — Add optional per-player page scraping for richer data (e.g. valuation history), while keeping it modular and rate-limit aware.
+
 
 ---
 

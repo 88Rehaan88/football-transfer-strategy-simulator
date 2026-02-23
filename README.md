@@ -90,6 +90,7 @@ Chart.js labels were cut off due to fixed heights and limited padding. We remove
 **4. Performance vs. data depth:**
 Fetching extra data (e.g. per-player pages) would increase requests and rate-limiting risk. We kept scraping at club level (transfers + squad), separated HTTP from parsing, and structured the scraper so per-player enrichment could be added later without hard coupling.
 
+---
 
 ## Limitations:
 
@@ -105,6 +106,7 @@ Fetching extra data (e.g. per-player pages) would increase requests and rate-lim
 
 **Salary and fees** — Salary is estimated as 10% of market value; sell fees use 85% of market value. These are approximations, not real contract or negotiation data.
 
+---
 
 ## Trade-offs:
 **Static scraper** — We use requests + BeautifulSoup instead of a browser-based scraper. This reduces complexity and avoids headless Chrome/Playwright, but we cannot run JavaScript or handle heavily dynamic pages.
